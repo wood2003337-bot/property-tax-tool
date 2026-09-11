@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>不動產現金流與稅務試算 | LINE好友專屬工具</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root{
+    --ink:#182530;
+    --ink-soft:#3a4a55;
+    --paper:#ECE8DD;
+    --paper-raised:#F6F3EA;
+    --seal:#9C3B2E;
+    --seal-dark:#7C2D22;
+    --brass:#8E6B33;
+    --line-hair:#C9C0AA;
+    --good:#3E6B4F;
+    --shadow: 0 8px 24px rgba(24,37,48,0.12);
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 10% 5%, rgba(24,37,48,0.03), transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(156,59,46,0.04), transparent 40%);
+    color:var(--ink);
+    font-family:"Noto Sans TC", sans-serif;
+    line-height:1.6;
+    min-height:100vh;
+  }
+  h1,h2,h3,.serif{
+    font-family:"Noto Serif TC", serif;
+  }
+  .wrap{
+    max-width:960px;
+    margin:0 auto;
+    padding:28px 18px 80px;
+  }
+  /* ---------- Masthead ---------- */
+  .masthead{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:26px;
+  }
+  .masthead .brand{
+    font-weight:900;
+    font-size:22px;
+    letter-spacing:0.04em;
+  }
+  .masthead .brand small{
+    display:block;
+    font-family:"Noto Sans TC", sans-serif;
+    font-weight:400;
+    font-size:12px;
+    letter-spacing:0.12em;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .masthead .tag{
+    font-size:12px;
+    color:var(--brass);
+    border:1px solid var(--brass);
+    padding:4px 10px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+
+  /* ---------- Gate screen ---------- */
+  #gate{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:70vh;
+  }
+  .gate-card{
+    background:var(--paper-raised);
+    border:1px solid var(--line-hair);
+    box-shadow:var(--shadow);
+    border-radius:var(--radius);
+    max-width:480px;
+    width:100%;
+    padding:36px 28px;
+    position:relative;
+    overflow:hidden;
+  }
+  .gate-card::before{
+    content:"";
+    position:absolute;
+    top:-40px; right:-40px;
+    width:140px; height:140px;
+    border:10px solid var(--seal);
+    border-radius:50%;
+    opacity:0.14;
+  }
+  .gate-card h2{
+    font-size:20px;
+    margin:0 0 6px;
+  }
+  .gate-card p{
+    color:var(--ink-soft);
+    font-size:14px;
+    margin:0 0 22px;
+  }
+  .gate-steps{
+    list-style:none;
+    margin:0 0 24px;
+    padding:0;
+    counter-reset:g;
+  }
+  .gate-steps li{
+    counter-increment:g;
+    display:flex;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px dashed var(--line-hair);
+    font-size:14px;
+  }
+  .gate-steps li:last-child{border-bottom:none;}
+  .gate-steps li::before{
+    content:counter(g);
+    flex:0 0 auto;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--paper);
+    font-size:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Noto Serif TC", serif;
+  }
+  .btn{
+    display:block;
+    width:100%;
+    text-align:center;
+    padding:13px 16px;
+    border-radius:var(--radius);
+    border:none;
+    font-family:"Noto Sans TC", sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    text-decoration:none;
+  }
+  .btn-line{
+    background:#06C755;
+    color:#fff;
+    margin-bottom:10px;
+  }
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--ink);
+    color:var(--ink);
+  }
+  .gate-status{
+    margin-top:16px;
+    font-size:13px;
+    text-align:center;
+    color:var(--ink-soft);
+    min-height:18px;
+  }
+  .gate-status.err{ color:var(--seal); }
+  .gate-status.ok{ color:var(--good); }
+  .fine{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:20px;
+    text-align:center;
+  }
+
+  /* ---------- Tool ---------- */
+  #tool{display:none;}
+  .section{
+    background:var(--paper-raised);
+    border:1px solid var(--line-hair);
+    border-radius:var(--radius);
+    padding:22px 20px;
+    margin-bottom:18px;
+  }
+  .section h3{
+    font-size:16px;
+    margin:0 0 4px;
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  .section h3 .num{
+    color:var(--seal);
+    font-size:13px;
+    border:1px solid var(--seal);
+    border-radius:50%;
+    width:20px;height:20px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .section .hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+  }
+  .field{
+    margin-bottom:14px;
+  }
+  .field label{
+    display:block;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .field input, .field select{
+    width:100%;
+    padding:10px 11px;
+    border:1px solid var(--line-hair);
+    border-radius:var(--radius);
+    background:#fff;
+    font-size:15px;
+    font-family:"Noto Sans TC", sans-serif;
+    font-variant-numeric: tabular-nums;
+    color:var(--ink);
+  }
+  .field input:focus, .field select:focus{
+    outline:2px solid var(--brass);
+    outline-offset:1px;
+  }
+  .row2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  @media(max-width:520px){ .row2{grid-template-columns:1fr;} }
+  .toggle-group{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .toggle-group button{
+    flex:1 1 auto;
+    padding:9px 12px;
+    border-radius:999px;
+    border:1px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+    font-size:13px;
+    font-family:"Noto Sans TC", sans-serif;
+    cursor:pointer;
+  }
+  .toggle-group button.active{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .note-box{
+    font-size:12.5px;
+    background:rgba(142,107,51,0.1);
+    border-left:3px solid var(--brass);
+    padding:9px 12px;
+    border-radius:2px;
+    margin-bottom:14px;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- Report ---------- */
+  #report{
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:var(--radius);
+    padding:26px 22px;
+  }
+  #report h3{
+    color:var(--paper);
+    font-size:18px;
+    margin:0 0 2px;
+  }
+  #report .sub{
+    font-size:12px;
+    color:#B9C3CA;
+    margin-bottom:18px;
+  }
+  .ledger{
+    border-top:1px solid rgba(255,255,255,0.18);
+  }
+  .ledger-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:9px 0;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    font-size:13.5px;
+  }
+  .ledger-row .v{
+    font-variant-numeric: tabular-nums;
+    white-space:nowrap;
+  }
+  .ledger-row.neg .v{ color:#E8A79A; }
+  .ledger-total{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:18px 0 4px;
+  }
+  .ledger-total .label{
+    font-size:13px;
+    color:#B9C3CA;
+  }
+  .ledger-total .value{
+    font-family:"Noto Serif TC", serif;
+    font-weight:900;
+    font-size:30px;
+    font-variant-numeric: tabular-nums;
+    color:#F0E7D0;
+  }
+  .ledger-total.profit .value{ color:#9FD8AE; font-size:22px; }
+  .report-actions{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .report-actions button{
+    flex:1;
+    padding:11px;
+    border-radius:var(--radius);
+    border:1px solid rgba(255,255,255,0.3);
+    background:transparent;
+    color:var(--paper);
+    font-size:13px;
+    cursor:pointer;
+    font-family:"Noto Sans TC", sans-serif;
+  }
+  .disclaimer{
+    font-size:11px;
+    color:var(--ink-soft);
+    text-align:center;
+    margin-top:24px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="masthead">
+    <div class="brand">不動產現金流與稅務試算<small>LINE 好友專屬工具</small></div>
+    <div class="tag">私人顧問模式</div>
+  </div>
+
+  <!-- ============ GATE ============ -->
+  <div id="gate">
+    <div class="gate-card">
+      <h2>差一步就能使用</h2>
+      <p>本工具僅提供官方好友使用,請先完成加入好友與驗證。</p>
+      <ul class="gate-steps">
+        <li>點下方綠色按鈕加入官方好友(若曾封鎖過,請先解除封鎖)</li>
+        <li>加入完成後,回到本頁點「我已加入,重新驗證」</li>
+        <li>驗證通過後會自動開啟試算工具</li>
+      </ul>
+      <a id="addFriendBtn" class="btn btn-line" href="#">加入官方好友</a>
+      <button id="recheckBtn" class="btn btn-ghost">我已加入,重新驗證</button>
+      <div id="gateStatus" class="gate-status">正在初始化驗證…</div>
+      <div class="fine">驗證僅用於確認好友資格,不會公開您的試算內容。</div>
+    </div>
+  </div>
+
+  <!-- ============ TOOL ============ -->
+  <div id="tool">
+
+    <div class="section">
+      <h3><span class="num">1</span>標的屬性與法規判定</h3>
+      <p class="hint">先判斷你的物件適用哪一套稅制。</p>
+      <div class="toggle-group" data-group="propertyType">
+        <button data-value="normal" class="active">一般成屋 / 土地</button>
+        <button data-value="presale">預售屋換約</button>
+      </div>
+      <div class="field">
+        <label id="dateLabel">取得日期(原始取得日 / 長輩或本人)</label>
+        <input type="date" id="acquireDate">
+      </div>
+      <div id="regimeNote" class="note-box"></div>
+    </div>
+
+    <div class="section">
+      <h3><span class="num">2</span>取得成本</h3>
+      <div class="toggle-group" data-group="acquireType">
+        <button data-value="buy" class="active">一般買賣取得</button>
+        <button data-value="inherit">繼承 / 贈與取得</button>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label id="buyPriceLabel">買入總價(萬元)</label>
+          <input type="number" id="buyPrice" placeholder="0">
+        </div>
+        <div class="field">
+          <label>賣出總價(萬元)</label>
+          <input type="number" id="sellPrice" placeholder="0">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>契稅 + 印花稅 + 代書費等取得費用合計(萬元)</label>
+          <input type="number" id="acquireExpense" placeholder="0">
+        </div>
+        <div class="field">
+          <label>裝潢 / 改良費(需憑證,萬元)</label>
+          <input type="number" id="renovationExpense" placeholder="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3><span class="num">3</span>現金流扣款精算</h3>
+      <p class="hint" id="sellExpenseHint"></p>
+      <div class="row2">
+        <div class="field">
+          <label>房仲服務費(%)</label>
+          <input type="number" id="brokerFeePct" placeholder="4" value="4">
+        </div>
+        <div class="field">
+          <label>履保費 + 代書費 + 其他規費(萬元)</label>
+          <input type="number" id="otherSellExpense" placeholder="0">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>實繳土地增值稅(萬元,扣現金)</label>
+          <input type="number" id="landValueTax" placeholder="0">
+        </div>
+        <div class="field">
+          <label>結清房貸尾款(萬元,扣現金)</label>
+          <input type="number" id="mortgagePayoff" placeholder="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="section4">
+      <h3><span class="num">4</span>持有期間與節稅選項</h3>
+      <div class="field">
+        <label>預計出售日期 / 換約日期</label>
+        <input type="date" id="sellDate">
+      </div>
+      <div class="toggle-group" data-group="selfUse">
+        <button data-value="no" class="active">一般出售</button>
+        <button data-value="yes">符合自住優惠(設籍滿6年、無出租營業)</button>
+      </div>
+      <div class="toggle-group" data-group="involuntary">
+        <button data-value="no" class="active">一般情形</button>
+        <button data-value="yes">非自願因素出售(調職/失業/重大傷病等)</button>
+      </div>
+      <div id="holdNote" class="note-box"></div>
+    </div>
+
+    <div id="report">
+      <h3>稅務精算報告</h3>
+      <div class="sub" id="reportDate"></div>
+      <div class="ledger" id="ledger"></div>
+      <div class="ledger-total">
+        <div class="label">結案日銀行淨入帳現金</div>
+        <div class="value" id="netCash">0 萬</div>
+      </div>
+      <div class="ledger-total profit">
+        <div class="label">預估淨利潤(已扣全部成本與稅金)</div>
+        <div class="value" id="netProfit">0 萬</div>
+      </div>
+      <div class="report-actions">
+        <button id="copyBtn">複製精算報告文字</button>
+      </div>
+    </div>
+
+    <div class="disclaimer">試算結果僅供內部參考,實際權益請以地政士 / 記帳士正式核算與契約為準。</div>
+  </div>
+</div>
+
+<script>
+/* ===================== 設定區(請替換成你自己的) ===================== */
+const LIFF_ID = "YOUR_LIFF_ID"; // 例如 "1234567890-AbCdEfGh"
+const OA_ADD_FRIEND_URL = "https://line.me/R/ti/p/@YOUR_OA_ID"; // 你的官方帳號加好友連結
+/* ===================================================================== */
+
+const gateEl = document.getElementById('gate');
+const toolEl = document.getElementById('tool');
+const statusEl = document.getElementById('gateStatus');
+const addFriendBtn = document.getElementById('addFriendBtn');
+const recheckBtn = document.getElementById('recheckBtn');
+
+addFriendBtn.href = OA_ADD_FRIEND_URL;
+
+function setStatus(msg, cls){
+  statusEl.textContent = msg;
+  statusEl.className = 'gate-status' + (cls ? ' ' + cls : '');
+}
+
+function unlockTool(){
+  gateEl.style.display = 'none';
+  toolEl.style.display = 'block';
+  recalc();
+}
+
+async function checkFriendship(){
+  setStatus('正在確認好友資格…');
+  try{
+    const res = await liff.getFriendship();
+    if(res && res.friendFlag){
+      setStatus('驗證成功,正在開啟工具…', 'ok');
+      setTimeout(unlockTool, 300);
+    }else{
+      setStatus('尚未偵測到好友關係,請先加入好友後再點「重新驗證」', 'err');
+    }
+  }catch(e){
+    // 部分舊版LINE或非LINE內建瀏覽器不支援 getFriendship
+    setStatus('無法自動偵測好友狀態,請確認已加入好友後點「重新驗證」', 'err');
+  }
+}
+
+async function initLiff(){
+  if(LIFF_ID === "YOUR_LIFF_ID"){
+    setStatus('尚未設定 LIFF_ID,請於程式碼設定區填入你的 LIFF ID', 'err');
+    return;
+  }
+  try{
+    await liff.init({ liffId: LIFF_ID });
+    if(!liff.isLoggedIn()){
+      setStatus('需要登入 LINE 才能驗證好友資格…');
+      liff.login();
+      return;
+    }
+    await checkFriendship();
+  }catch(e){
+    setStatus('LIFF 初始化失敗,請確認是否透過 LINE 開啟此連結', 'err');
+  }
+}
+
+recheckBtn.addEventListener('click', checkFriendship);
+
+window.addEventListener('load', initLiff);
+
+/* ===================== 稅務試算邏輯 ===================== */
+
+const state = {
+  propertyType: 'normal',
+  acquireType: 'buy',
+  selfUse: 'no',
+  involuntary: 'no'
+};
+
+document.querySelectorAll('.toggle-group').forEach(group => {
+  const key = group.dataset.group;
+  group.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state[key] = btn.dataset.value;
+      onPropertyTypeOrAcquireChange();
+      recalc();
+    });
+  });
+});
+
+function onPropertyTypeOrAcquireChange(){
+  const dateLabel = document.getElementById('dateLabel');
+  const buyPriceLabel = document.getElementById('buyPriceLabel');
+  const section4 = document.getElementById('section4');
+
+  if(state.propertyType === 'presale'){
+    dateLabel.textContent = '預售屋合約簽訂日';
+    section4.style.display = 'none';
+  }else{
+    dateLabel.textContent = '取得日期(原始取得日 / 長輩或本人)';
+    section4.style.display = 'block';
+  }
+
+  buyPriceLabel.textContent = state.acquireType === 'inherit'
+    ? '繼承 / 受贈時之房地現值(萬元)'
+    : '買入總價(萬元)';
+}
+
+['acquireDate','sellDate','buyPrice','sellPrice','acquireExpense',
+ 'renovationExpense','brokerFeePct','otherSellExpense','landValueTax','mortgagePayoff']
+ .forEach(id => document.getElementById(id).addEventListener('input', recalc));
+
+function num(id){
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? 0 : v;
+}
+
+function yearsBetween(d1, d2){
+  if(!d1 || !d2) return 0;
+  const ms = d2 - d1;
+  return ms / (1000*60*60*24*365.25);
+}
+
+function regimeForDate(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr);
+  const cutOld = new Date('2013-08-01');
+  const cutNew = new Date('2016-01-01');
+  if(d < cutOld) return 'pure_old';       // 101/08 以前:純舊制(財交稅)
+  if(d < cutNew) return 'transition_old'; // 101/08~104/12:過渡舊制
+  return 'new_2_0';                        // 105年以後:房地合一稅2.0
+}
+
+function newRegimeRate(holdYears, {selfUse, involuntary, isPresale}){
+  if(involuntary === 'yes') return 0.20;
+  if(!isPresale && selfUse === 'yes' && holdYears >= 6) return 'selfuse'; // 特殊處理(400萬免稅+10%)
+  if(holdYears <= 2) return 0.45;
+  if(holdYears <= 5) return 0.35;
+  if(!isPresale && holdYears <= 10) return 0.20;
+  if(!isPresale) return 0.15;
+  return 0.20; // 預售屋沒有10年以上級距,超過5年比照20%
+}
+
+function fmt(n){
+  const v = Math.round((n + Number.EPSILON) * 100) / 100;
+  return v.toLocaleString('zh-TW', {maximumFractionDigits:2});
+}
+
+function recalc(){
+  onPropertyTypeOrAcquireChange();
+
+  const acquireDate = document.getElementById('acquireDate').value;
+  const sellDate = document.getElementById('sellDate').value;
+  const isPresale = state.propertyType === 'presale';
+
+  const buyPrice = num('buyPrice');
+  const sellPrice = num('sellPrice');
+  const acquireExpense = num('acquireExpense') + num('renovationExpense');
+  const brokerFeePct = num('brokerFeePct');
+  const brokerFee = sellPrice * (brokerFeePct/100);
+  const otherSellExpense = num('otherSellExpense');
+  const landValueTax = num('landValueTax');
+  const mortgagePayoff = num('mortgagePayoff');
+
+  const regime = isPresale ? 'new_2_0' : regimeForDate(acquireDate);
+
+  // 法定3%上限提示
+  const cap3pct = sellPrice * 0.03;
+  const actualSellExpense = brokerFee + otherSellExpense;
+  document.getElementById('sellExpenseHint').textContent =
+    `實際出售費用合計 ${fmt(actualSellExpense)} 萬 ｜ 法定3%上限 ${fmt(cap3pct)} 萬`;
+
+  // regime 說明
+  const regimeNote = document.getElementById('regimeNote');
+  if(isPresale){
+    regimeNote.textContent = '【預售屋權利移轉】強制適用房地合一稅2.0新制,無自住免稅優惠,持有期間自合約簽訂日起算。';
+  }else if(regime === 'pure_old'){
+    regimeNote.textContent = '【101/08以前取得】適用舊制,出售所得併入個人綜合所得稅之財產交易所得(僅房屋部分),本工具以20%概算供參考,實際應依個人稅率申報。';
+  }else if(regime === 'transition_old'){
+    regimeNote.textContent = '【101/08~104/12取得】適用過渡舊制,處理方式同財產交易所得,本工具以20%概算供參考。';
+  }else if(regime === 'new_2_0'){
+    regimeNote.textContent = '【105年以後取得】適用房地合一稅2.0,依持有期間累退稅率課稅,並得享自住/重購等優惠。';
+  }else{
+    regimeNote.textContent = '請先輸入取得日期以判定適用稅制。';
+  }
+
+  // 稅額計算
+  let taxAmount = 0;
+  let holdYears = 0;
+  let holdNoteText = '';
+
+  const taxableIncome = Math.max(0, sellPrice - buyPrice - acquireExpense);
+
+  if(acquireDate && sellDate){
+    holdYears = yearsBetween(new Date(acquireDate), new Date(sellDate));
+  }
+
+  if(regime === 'pure_old' || regime === 'transition_old'){
+    taxAmount = taxableIncome * 0.20; // 概算,僅供參考
+    holdNoteText = '舊制稅額為概算值,實際應按房屋現值比例拆算並併入個人綜所稅級距計算。';
+  }else if(regime === 'new_2_0'){
+    const rate = newRegimeRate(holdYears, {
+      selfUse: isPresale ? 'no' : state.selfUse,
+      involuntary: state.involuntary,
+      isPresale
+    });
+    if(rate === 'selfuse'){
+      const exemptIncome = Math.min(taxableIncome, 400);
+      const remain = Math.max(0, taxableIncome - 400);
+      taxAmount = remain * 0.10;
+      holdNoteText = `持有滿6年且符合自住條件:課稅所得中 ${fmt(exemptIncome)} 萬免稅,超過部分 ${fmt(remain)} 萬按10%課徵。`;
+    }else{
+      taxAmount = taxableIncome * rate;
+      holdNoteText = `持有期間約 ${holdYears.toFixed(1)} 年,適用稅率 ${(rate*100).toFixed(0)}%。`;
+    }
+    if(state.involuntary === 'yes'){
+      holdNoteText += '(因屬非自願因素出售,固定適用20%稅率)';
+    }
+  }else{
+    holdNoteText = '尚無法判定持有期間,請確認取得日期與出售日期。';
+  }
+
+  document.getElementById('holdNote').textContent = holdNoteText;
+
+  // 現金流帳本
+  const ledger = document.getElementById('ledger');
+  const rows = [
+    ['預估賣出總價', sellPrice, false],
+    ['扣除:房仲服務費', -brokerFee, true],
+    ['扣除:履保費/代書費/其他規費', -otherSellExpense, true],
+    ['扣除:實繳土地增值稅', -landValueTax, true],
+    ['扣除:結清房貸尾款', -mortgagePayoff, true],
+    [isPresale ? '扣除:預估房地合一稅' : (regime === 'new_2_0' ? '扣除:房地合一稅' : '扣除:預估財交稅(概算)'), -taxAmount, true],
+  ];
+  ledger.innerHTML = rows.map(([label, val, neg]) => `
+    <div class="ledger-row ${neg?'neg':''}">
+      <div class="l">${label}</div>
+      <div class="v">${val<0?'－':''}${fmt(Math.abs(val))} 萬</div>
+    </div>
+  `).join('');
+
+  const netCash = sellPrice - brokerFee - otherSellExpense - landValueTax - mortgagePayoff - taxAmount;
+  const netProfit = netCash - buyPrice - acquireExpense;
+
+  document.getElementById('netCash').textContent = fmt(netCash) + ' 萬';
+  document.getElementById('netProfit').textContent = fmt(netProfit) + ' 萬';
+  document.getElementById('reportDate').textContent =
+    '試算產出日期:' + new Date().toLocaleDateString('zh-TW') + ' ｜ 報告僅供內部參考';
+
+  window._lastReport = { sellPrice, brokerFee, otherSellExpense, landValueTax, mortgagePayoff, taxAmount, netCash, netProfit, holdNoteText, regimeNote: regimeNote.textContent };
+}
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const r = window._lastReport;
+  if(!r) return;
+  const text =
+`【不動產現金流與稅務精算報告】
+賣出總價:${fmt(r.sellPrice)} 萬
+房仲服務費:-${fmt(r.brokerFee)} 萬
+其他出售費用:-${fmt(r.otherSellExpense)} 萬
+土地增值稅:-${fmt(r.landValueTax)} 萬
+結清房貸尾款:-${fmt(r.mortgagePayoff)} 萬
+預估稅金:-${fmt(r.taxAmount)} 萬
+------------------------
+銀行淨入帳現金:${fmt(r.netCash)} 萬
+預估淨利潤:${fmt(r.netProfit)} 萬
+
+${r.regimeNote}
+${r.holdNoteText}
+(僅供內部參考,實際權益請以地政士正式核算為準)`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const old = btn.textContent;
+    btn.textContent = '已複製!';
+    setTimeout(()=>btn.textContent = old, 1500);
+  });
+});
+
+onPropertyTypeOrAcquireChange();
+</script>
+</body>
+</html>
